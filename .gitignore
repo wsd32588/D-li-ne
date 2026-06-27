@@ -1,0 +1,28 @@
+# IDE metadata
+.idea/
+.vscode/
+
+# CMake build directories
+build/
+build-*/
+cmake-build-*/
+out/
+
+# In-source CMake output
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+Testing/
+cmake_install.cmake
+compile_commands.json
+
+# Compiled output
+*.a
+*.dll
+*.dylib
+*.exe
+*.lib
+*.o
+*.obj
+*.pdb
+*.so
