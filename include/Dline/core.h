@@ -22,7 +22,9 @@ typedef enum {
     DLINE_ERROR_INVALID_ARGUMENT,
     DLINE_ERROR_OUT_OF_MEMORY,
     DLINE_ERROR_CAPACITY_OVERFLOW,
-    DLINE_ERROR_INVALID_UTF8
+    DLINE_ERROR_INVALID_UTF8,
+    DLINE_ERROR_IO,
+    DLINE_ERROR_FILE_TOO_LARGE
 } DlineResult;
 
 DLINE_API const char *dline_result_string(DlineResult result);

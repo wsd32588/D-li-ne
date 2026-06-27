@@ -1,12 +1,11 @@
 #include "buffer.h"
 
+#include "limit.h"
 #include "memory.h"
 
 #include <string.h>
 
-enum {
-    BUFFER_INITIAL_CAPACITY = 256
-};
+static const size_t BUFFER_INITIAL_CAPACITY = 256;
 
 DlineResult buffer_init(DlineBuffer *buffer) {
     if (buffer == NULL) {
@@ -14,13 +13,6 @@ DlineResult buffer_init(DlineBuffer *buffer) {
     }
 
     *buffer = (DlineBuffer){0};
-
-    buffer->data = dline_malloc(BUFFER_INITIAL_CAPACITY);
-    if (buffer->data == NULL) {
-        return DLINE_ERROR_OUT_OF_MEMORY;
-    }
-
-    buffer->capacity = BUFFER_INITIAL_CAPACITY;
     return DLINE_OK;
 }
 
@@ -37,26 +29,35 @@ DlineResult buffer_reserve(
     DlineBuffer *buffer,
     size_t required_capacity
 ) {
+    return buffer_reserve_limited(buffer, required_capacity, SIZE_MAX);
+}
+
+DlineResult buffer_reserve_limited(
+    DlineBuffer *buffer,
+    size_t required_capacity,
+    size_t maximum_capacity
+) {
     if (buffer == NULL) {
         return DLINE_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (required_capacity > maximum_capacity) {
+        return DLINE_ERROR_CAPACITY_OVERFLOW;
     }
 
     if (required_capacity <= buffer->capacity) {
         return DLINE_OK;
     }
 
-    size_t new_capacity = buffer->capacity;
-    if (new_capacity == 0) {
-        new_capacity = BUFFER_INITIAL_CAPACITY;
-    }
-
-    while (new_capacity < required_capacity) {
-        if (new_capacity > SIZE_MAX / 2) {
-            new_capacity = required_capacity;
-            break;
-        }
-
-        new_capacity *= 2;
+    size_t new_capacity = 0;
+    if (!limit_calculate_capacity(
+            buffer->capacity,
+            required_capacity,
+            BUFFER_INITIAL_CAPACITY,
+            maximum_capacity,
+            &new_capacity
+        )) {
+        return DLINE_ERROR_CAPACITY_OVERFLOW;
     }
 
     uint8_t *new_data = dline_realloc(buffer->data, new_capacity);
@@ -74,16 +75,34 @@ DlineResult buffer_append(
     const uint8_t *data,
     size_t length
 ) {
+    return buffer_append_limited(buffer, data, length, SIZE_MAX);
+}
+
+DlineResult buffer_append_limited(
+    DlineBuffer *buffer,
+    const uint8_t *data,
+    size_t length,
+    size_t maximum_capacity
+) {
     if (buffer == NULL || (data == NULL && length != 0)) {
         return DLINE_ERROR_INVALID_ARGUMENT;
     }
 
-    if (length > SIZE_MAX - buffer->length) {
+    size_t required_capacity = 0;
+    if (!limit_checked_add(
+            buffer->length,
+            length,
+            maximum_capacity,
+            &required_capacity
+        )) {
         return DLINE_ERROR_CAPACITY_OVERFLOW;
     }
 
-    size_t required_capacity = buffer->length + length;
-    DlineResult result = buffer_reserve(buffer, required_capacity);
+    DlineResult result = buffer_reserve_limited(
+        buffer,
+        required_capacity,
+        maximum_capacity
+    );
 
     if (result != DLINE_OK) {
         return result;

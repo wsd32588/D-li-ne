@@ -12,6 +12,10 @@ const char *dline_result_string(DlineResult result) {
             return "buffer capacity overflow";
         case DLINE_ERROR_INVALID_UTF8:
             return "invalid UTF-8";
+        case DLINE_ERROR_IO:
+            return "I/O error";
+        case DLINE_ERROR_FILE_TOO_LARGE:
+            return "file exceeds the configured size limit";
         default:
             return "unknown error";
     }

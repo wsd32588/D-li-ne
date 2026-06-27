@@ -18,10 +18,21 @@ DlineResult buffer_reserve(
     DlineBuffer *buffer,
     size_t required_capacity
 );
+DlineResult buffer_reserve_limited(
+    DlineBuffer *buffer,
+    size_t required_capacity,
+    size_t maximum_capacity
+);
 DlineResult buffer_append(
     DlineBuffer *buffer,
     const uint8_t *data,
     size_t length
+);
+DlineResult buffer_append_limited(
+    DlineBuffer *buffer,
+    const uint8_t *data,
+    size_t length,
+    size_t maximum_capacity
 );
 
 #endif
